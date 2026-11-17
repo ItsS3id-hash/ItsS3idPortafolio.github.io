@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ItsS3id · Portafolio</title>
+<meta name="description" content="Portafolio de ItsS3id: animaciones e interfaces de usuario para Roblox.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #ffd21f;
+    --orange: #ff7a00;
+    --black: #141210;
+    --cream: #fff3b0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--yellow);
+    color: var(--black);
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--black); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem; }
+
+  header.top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.25rem 0; }
+  header.top strong { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 1.2rem; }
+  nav { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+  nav a { text-decoration: none; font-weight: 600; }
+  nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+  .hero { padding: 4.5rem 0 3.5rem; }
+  .hero h1 {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    font-weight: 800; font-size: clamp(2.8rem, 10vw, 6.5rem);
+    line-height: .95; letter-spacing: -.03em; margin: 0 0 1.5rem;
+  }
+  .hero p { max-width: 36rem; font-size: 1.25rem; margin: 0 0 2rem; }
+  .strata { display: grid; grid-template-rows: 14px 14px 14px; max-width: 14rem; margin-bottom: 2rem; }
+  .strata i:nth-child(1) { background: var(--orange); }
+  .strata i:nth-child(2) { background: var(--black); }
+  .strata i:nth-child(3) { background: var(--black); opacity: .55; }
+  .btn {
+    display: inline-block; text-decoration: none; font-weight: 600;
+    background: var(--black); color: var(--yellow);
+    padding: .8rem 1.4rem; border-radius: 6px; border: 2px solid var(--black);
+  }
+  .btn.alt { background: transparent; color: var(--black); margin-left: .5rem; }
+
+  section { padding: 3.5rem 0; border-top: 2px solid var(--black); }
+  h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 2rem; letter-spacing: -.02em; margin: 0 0 1.5rem; }
+  .about { max-width: 40rem; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.75rem; }
+  .tabs button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    background: transparent; color: var(--black);
+    border: 2px solid var(--black); border-radius: 6px; padding: .6rem 1.2rem;
+  }
+  .tabs button[aria-selected="true"] { background: var(--black); color: var(--yellow); }
+  .tabs button:hover { background: var(--orange); color: var(--black); }
+
+  .grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+  .card { background: var(--black); color: var(--cream); border-radius: 6px; overflow: hidden; border-bottom: 6px solid var(--orange); }
+  .card img, .card video { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #000; }
+  .card .body { padding: 1rem 1.2rem 1.2rem; }
+  .card h3 { font-family: "Bricolage Grotesque", system-ui, sans-serif; margin: 0; font-size: 1.15rem; color: var(--yellow); }
+  .card a { display: inline-block; margin-top: .5rem; color: var(--orange); font-weight: 600; }
+  .empty { margin: 0; padding: 1.5rem; border: 2px dashed var(--black); border-radius: 6px; max-width: 34rem; }
+
+  .skills { display: flex; flex-wrap: wrap; gap: .6rem; padding: 0; list-style: none; margin: 0; }
+  .skills li { background: var(--black); color: var(--yellow); border-radius: 6px; padding: .4rem .9rem; font-weight: 600; }
+  .skills li:nth-child(3n) { color: var(--orange); }
+
+  .contact p { max-width: 36rem; }
+  .contact ul { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: .5rem; }
+  .contact a { font-weight: 600; }
+
+  footer { padding: 2rem 0 3rem; font-size: .95rem; border-top: 2px solid var(--black); }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  @media (max-width: 36rem) { .btn.alt { margin: .75rem 0 0; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <strong>ItsS3id</strong>
+    <nav aria-label="Principal">
+      <a href="#sobre-mi">Sobre mí</a>
+      <a href="#habilidades">Habilidades</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="strata" aria-hidden="true"><i></i><i></i><i></i></div>
+      <h1>Hola, soy ItsS3id.</h1>
+      <p>Hago animaciones, interfaces de usuario y un poco de todo para Roblox.</p>
+      <a class="btn" href="#trabajo">Ver mi trabajo</a>
+      <a class="btn alt" href="#contacto">Escríbeme</a>
+    </div>
+
+    <section id="sobre-mi">
+      <h2>Sobre mí</h2>
+      <div class="about">
+        <p>Escribe aquí dos o tres frases sobre ti: cuánto tiempo llevas en Roblox, qué tipo de animaciones haces y qué te gusta crear. Este texto lo cambias directamente en el archivo index.html.</p>
+      </div>
+    </section>
+
+    <section id="trabajo">
+      <h2>Mi trabajo</h2>
+      <div class="tabs" role="tablist" aria-label="Categorías">
+        <button type="button" role="tab" id="tab-animaciones" aria-selected="true" aria-controls="panel" data-key="animaciones">Animaciones</button>
+        <button type="button" role="tab" id="tab-interfaces" aria-selected="false" aria-controls="panel" data-key="interfaces">Interfaces de usuario</button>
+        <button type="button" role="tab" id="tab-proyectos" aria-selected="false" aria-controls="panel" data-key="proyectos">Proyectos</button>
+      </div>
+      <div id="panel" role="tabpanel" aria-live="polite"></div>
+    </section>
+
+    <section id="habilidades">
+      <h2>Habilidades</h2>
+      <ul class="skills">
+        <li>Animación</li>
+        <li>Interfaces de usuario</li>
+        <li>Roblox Studio</li>
+        <li>Diseño</li>
+      </ul>
+    </section>
+
+    <section id="contacto" class="contact">
+      <h2>Contacto</h2>
+      <p>¿Quieres una animación o una interfaz para tu juego? Escríbeme.</p>
+      <ul>
+        <li><a href="https://www.roblox.com/users/TU-ID/profile">Mi perfil de Roblox</a></li>
+        <li>Discord: TU-DISCORD</li>
+        <li><a href="mailto:tucorreo@ejemplo.com">tucorreo@ejemplo.com</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>© <span id="anio">2026</span> ItsS3id</footer>
+</div>
+
+<script>
+  // Si la página no detecta tu repositorio sola, escribe aquí tu usuario y el nombre del repositorio.
+  var REPO_USER = "";
+  var REPO_NAME = "";
+
+  var SECCIONES = {
+    animaciones: { carpeta: "animaciones", vacio: "No hay animaciones disponibles por ahora." },
+    interfaces:  { carpeta: "interfaces",  vacio: "No hay interfaces de usuario disponibles por ahora." },
+    proyectos:   { carpeta: "proyectos",   vacio: "No estoy en ningún proyecto de momento." }
+  };
+  var IGNORAR = ["leeme.txt", "readme.md", "readme.txt"];
+  var IMG = /\.(png|jpe?g|gif|webp|avif)$/i;
+  var VID = /\.(mp4|webm|mov)$/i;
+
+  document.getElementById("anio").textContent = new Date().getFullYear();
+
+  function detectarRepo() {
+    var user = REPO_USER, repo = REPO_NAME;
+    var host = location.hostname;
+    if (!user && /\.github\.io$/i.test(host)) {
+      user = host.split(".")[0];
+      var primero = location.pathname.split("/")[1];
+      repo = repo || (primero ? primero : user + ".github.io");
+    }
+    return { user: user, repo: repo };
+  }
+
+  function titulo(nombre) {
+    return nombre.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  }
+
+  function mensaje(texto) {
+    var p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = texto;
+    return p;
+  }
+
+  function tarjeta(archivo) {
+    var card = document.createElement("article");
+    card.className = "card";
+    var ruta = archivo.path.split("/").map(encodeURIComponent).join("/");
+    var nombre = titulo(archivo.name);
+    if (IMG.test(archivo.name)) {
+      var img = document.createElement("img");
+      img.src = ruta; img.alt = nombre; img.loading = "lazy";
+      card.appendChild(img);
+    } else if (VID.test(archivo.name)) {
+      var v = document.createElement("video");
+      v.src = ruta; v.controls = true; v.preload = "metadata"; v.setAttribute("playsinline", "");
+      card.appendChild(v);
+    }
+    var body = document.createElement("div");
+    body.className = "body";
+    var h = document.createElement("h3");
+    h.textContent = nombre;
+    body.appendChild(h);
+    if (!IMG.test(archivo.name) && !VID.test(archivo.name)) {
+      var a = document.createElement("a");
+      a.href = ruta; a.textContent = "Abrir archivo";
+      body.appendChild(a);
+    }
+    card.appendChild(body);
+    return card;
+  }
+
+  var cache = {};
+
+  function cargar(clave) {
+    var panel = document.getElementById("panel");
+    var seccion = SECCIONES[clave];
+    panel.setAttribute("aria-labelledby", "tab-" + clave);
+    if (cache[clave]) { pintar(panel, seccion, cache[clave]); return; }
+    var r = detectarRepo();
+    if (!r.user) { panel.replaceChildren(mensaje(seccion.vacio)); return; }
+    panel.replaceChildren(mensaje("Cargando…"));
+    var url = "https://api.github.com/repos/" + r.user + "/" + r.repo + "/contents/" + seccion.carpeta;
+    fetch(url, { headers: { "Accept": "application/vnd.github+json" } })
+      .then(function (res) {
+        if (res.status === 404) return [];
+        if (!res.ok) throw new Error("error");
+        return res.json();
+      })
+      .then(function (lista) {
+        var archivos = (Array.isArray(lista) ? lista : []).filter(function (f) {
+          return f.type === "file" && f.name.charAt(0) !== "." && IGNORAR.indexOf(f.name.toLowerCase()) === -1;
+        });
+        cache[clave] = archivos;
+        pintar(panel, seccion, archivos);
+      })
+      .catch(function () {
+        panel.replaceChildren(mensaje("No se pudo cargar esta sección. Intenta de nuevo en unos minutos."));
+      });
+  }
+
+  function pintar(panel, seccion, archivos) {
+    if (!archivos.length) { panel.replaceChildren(mensaje(seccion.vacio)); return; }
+    var grid = document.createElement("div");
+    grid.className = "grid";
+    archivos.forEach(function (f) { grid.appendChild(tarjeta(f)); });
+    panel.replaceChildren(grid);
+  }
+
+  var botones = document.querySelectorAll(".tabs button");
+  botones.forEach(function (b) {
+    b.addEventListener("click", function () {
+      botones.forEach(function (o) { o.setAttribute("aria-selected", o === b ? "true" : "false"); });
+      cargar(b.getAttribute("data-key"));
+    });
+  });
+  cargar("animaciones");
+</script>
+</body>
+</html>

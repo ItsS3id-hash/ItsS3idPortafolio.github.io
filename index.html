@@ -11,13 +11,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  /* Si subes tu fuente Highway Gothic a la carpeta "fonts" del repositorio, se usa sola.
+  /* Si subes tu fuente Highway Gothic a la carpeta "fonts" del repositorio (.woff2, .ttf u .otf), se usa sola.
      Si no, se usa Overpass, que está basada en Highway Gothic. */
   @font-face {
     font-family: "Highway Gothic";
     font-weight: 100 900;
     font-display: swap;
-    src: local("Highway Gothic Bold"), local("HighwayGothic-Bold"), url("fonts/HighwayGothic-Bold.woff2") format("woff2");
+    src: local("Highway Gothic Bold"), local("HighwayGothic-Bold"),
+      url("fonts/HighwayGothic-Bold.woff2") format("woff2"),
+      url("fonts/HighwayGothic-Bold.ttf") format("truetype"),
+      url("fonts/HighwayGothic-Bold.otf") format("opentype");
   }
   :root {
     --yellow: #ffc72c;
@@ -90,8 +93,6 @@
   .contact a:hover { color: var(--orange); background: var(--black); padding: 0 .3rem; text-decoration: none; }
 
   footer { background: var(--black); color: var(--cream); padding: 1.5rem 0; }
-  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1.5rem; }
-  #visitas strong { color: var(--yellow); }
 
   /* Animaciones */
   .btn, .tabs button, .skills li, .card, nav a, .contact a { transition: transform .3s cubic-bezier(.2, .8, .2, 1), background-color .25s, color .25s, box-shadow .3s; }
@@ -176,16 +177,13 @@
   </section>
 </main>
 
-<footer><div class="wrap"><span>© <span id="anio">2026</span> ItsS3id</span><span id="visitas" hidden>Visitas a la página: <strong id="visitas-n">…</strong></span></div></footer>
+<footer><div class="wrap">© <span id="anio">2026</span> ItsS3id</div></footer>
 
 <script>
   // Si la página no detecta tu repositorio sola, escribe aquí tu usuario y el nombre del repositorio.
   var REPO_USER = "";
   var REPO_NAME = "";
 
-  // Contador de visitas: escribe aquí el código de tu cuenta de GoatCounter (por ejemplo "itss3id").
-  // Mientras esté vacío, el contador no aparece.
-  var GOATCOUNTER = "itss3id";
 
   // Textos de respaldo: se usan hasta que crees los archivos sobre-mi.txt, habilidades.txt y contacto.txt
   var SOBRE_DEFECTO = "inicio: 2025-08\nLlevo [tiempo] animando en Roblox. Cuéntale a tus visitantes qué haces y qué te gusta crear.";
@@ -416,29 +414,6 @@
   });
   cargar("animaciones");
 
-  /* ---------- Contador de visitas (GoatCounter) ---------- */
-  if (/^[a-z0-9-]+$/i.test(GOATCOUNTER)) {
-    var gc = document.createElement("script");
-    gc.async = true;
-    gc.src = "https://gc.zgo.at/count.js";
-    gc.setAttribute("data-goatcounter", "https://" + GOATCOUNTER + ".goatcounter.com/count");
-    // Para diagnosticar: abre tu página con ?debug al final de la dirección y verás qué falla.
-    var depurar = /[?&]debug/.test(location.search);
-    function aviso(msg) {
-      if (!depurar) return;
-      var v = document.getElementById("visitas");
-      v.textContent = "Contador: " + msg; v.hidden = false;
-    }
-    gc.onerror = function () { aviso("el navegador bloqueó count.js"); };
-    document.body.appendChild(gc);
-    fetch("https://" + GOATCOUNTER + ".goatcounter.com/counter/TOTAL.json")
-      .then(function (r) { if (!r.ok) throw new Error("respuesta " + r.status); return r.json(); })
-      .then(function (d) {
-        document.getElementById("visitas-n").textContent = d.count;
-        document.getElementById("visitas").hidden = false;
-      })
-      .catch(function (e) { aviso("no se pudo leer el número (" + e.message + ")"); });
-  }
 </script>
 </body>
 </html>

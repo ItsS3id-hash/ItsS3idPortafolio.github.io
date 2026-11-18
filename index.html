@@ -72,8 +72,8 @@
   .grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr)); }
   .card { background: var(--black); color: var(--cream); border-radius: 12px; overflow: hidden; border-bottom: 6px solid var(--orange); }
   .card img, .card video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #000; }
-  .card.grande { grid-column: 1 / -1; }
-  .card.grande video { max-height: 85vh; }
+  .card.grande { grid-column: 1 / -1; justify-self: center; width: min(100%, 52rem); animation: crece .5s cubic-bezier(.2, .8, .2, 1); }
+  .card.vuelve { animation: vuelve .45s cubic-bezier(.2, .8, .2, 1); }
   .card .body { padding: .9rem 1.2rem 1.1rem; }
   .card h4 { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--yellow); }
   .card a { display: inline-block; margin-top: .4rem; color: var(--orange); }
@@ -89,7 +89,39 @@
 
   footer { background: var(--black); color: var(--cream); padding: 1.5rem 0; }
 
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  /* Animaciones */
+  .btn, .tabs button, .skills li, .card, nav a, .contact a { transition: transform .3s cubic-bezier(.2, .8, .2, 1), background-color .25s, color .25s, box-shadow .3s; }
+  nav a { background: linear-gradient(var(--orange), var(--orange)) 0 100% / 0 3px no-repeat; transition: color .25s, background-size .3s; }
+  nav a:hover { background-size: 100% 3px; }
+  .btn:hover, .tabs button:hover { transform: translateY(-3px); }
+  .btn:active, .tabs button:active { transform: scale(.96); }
+  .skills li:hover { transform: translateY(-4px) rotate(-1.5deg); }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 18px 26px -14px rgba(22, 19, 15, .6); }
+  .tiempo { display: inline-block; animation: pop .6s .5s cubic-bezier(.2, .8, .2, 1) backwards; }
+  header.top { animation: baja .6s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .sign { animation: marco .8s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .strata i { transform-origin: left; animation: barra .7s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .strata i:nth-child(1) { animation-delay: .25s; }
+  .strata i:nth-child(2) { animation-delay: .4s; }
+  .strata i:nth-child(3) { animation-delay: .55s; }
+  .sign h1 { animation: sube .8s .3s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .sign p { animation: sube .8s .45s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .sign .btn { animation: sube .8s .6s cubic-bezier(.2, .8, .2, 1) backwards; }
+  .sign .btn.alt { animation-delay: .72s; }
+  .reveal { opacity: 0; transform: translateY(26px); }
+  .reveal.visto { opacity: 1; transform: none; transition: opacity .7s cubic-bezier(.2, .8, .2, 1) calc(var(--i, 0) * 80ms), transform .7s cubic-bezier(.2, .8, .2, 1) calc(var(--i, 0) * 80ms); }
+  @keyframes sube { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes baja { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  @keyframes barra { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes marco { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes crece { from { opacity: .5; transform: scale(.92); } to { opacity: 1; transform: none; } }
+  @keyframes vuelve { from { opacity: .7; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+  @keyframes pop { 0% { opacity: 0; transform: scale(.6); } 70% { transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
   @media (max-width: 36rem) { .btn.alt { margin: .75rem 0 0; } .sign { margin-top: 2.5rem; } }
 </style>
 </head>
@@ -163,6 +195,27 @@
 
   document.getElementById("anio").textContent = new Date().getFullYear();
 
+  /* ---------- Animaciones al hacer scroll ---------- */
+  var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var obs = ("IntersectionObserver" in window && !reducido) ? new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var el = e.target; obs.unobserve(el);
+      el.classList.add("visto");
+      var i = +el.style.getPropertyValue("--i") || 0;
+      setTimeout(function () { el.classList.remove("reveal", "visto"); }, 900 + i * 80);
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }) : null;
+  function revelar(lista) {
+    if (!obs) return;
+    Array.prototype.forEach.call(lista, function (el) {
+      var i = Array.prototype.indexOf.call(el.parentNode.children, el);
+      el.style.setProperty("--i", Math.min(i, 8));
+      el.classList.add("reveal"); obs.observe(el);
+    });
+  }
+  revelar(document.querySelectorAll("section h2, .about, .tabs"));
+
   /* ---------- Textos editables ---------- */
   function leerTexto(archivo, defecto) {
     return fetch(archivo, { cache: "no-cache" })
@@ -206,6 +259,7 @@
     lineas(texto).forEach(function (h) {
       var li = document.createElement("li"); li.textContent = h; ul.appendChild(li);
     });
+    revelar(ul.children);
   }
   function pintarContacto(texto) {
     var ul = document.getElementById("lista-contacto");
@@ -223,6 +277,7 @@
       }
       ul.appendChild(li);
     });
+    revelar(ul.children);
   }
   pintarSobreMi(SOBRE_DEFECTO); pintarHabilidades(HABILIDADES_DEFECTO); pintarContacto(CONTACTO_DEFECTO);
   leerTexto("sobre-mi.txt", SOBRE_DEFECTO).then(pintarSobreMi);
@@ -282,7 +337,12 @@
       var img = document.createElement("img"); img.src = src; img.alt = nombre; img.loading = "lazy"; card.appendChild(img);
     } else if (VID.test(f.name)) {
       var v = document.createElement("video"); v.src = src + "#t=0.1"; v.controls = true; v.preload = "metadata"; v.setAttribute("playsinline", "");
-      v.addEventListener("play", function () { ampliar(card, v); });
+      v.loop = true;
+      v.addEventListener("play", function () { clearTimeout(card._t); ampliar(card, v); });
+      v.addEventListener("pause", function () {
+        clearTimeout(card._t);
+        card._t = setTimeout(function () { if (v.paused && !v.seeking) achicar(card); }, 350);
+      });
       card.appendChild(v);
     }
     var body = document.createElement("div"); body.className = "body";
@@ -294,9 +354,16 @@
     return card;
   }
 
-  // Al reproducir un video, su tarjeta ocupa todo el ancho y las demás se acomodan debajo.
+  function achicar(card) {
+    if (!card.classList.contains("grande")) return;
+    card.classList.remove("grande");
+    card.classList.add("vuelve");
+    setTimeout(function () { card.classList.remove("vuelve"); }, 450);
+  }
+
+  // Al reproducir un video, su tarjeta se agranda y las demás se acomodan alrededor.
   function ampliar(card, video) {
-    document.querySelectorAll(".card.grande").forEach(function (c) { if (c !== card) c.classList.remove("grande"); });
+    document.querySelectorAll(".card.grande").forEach(function (c) { if (c !== card) achicar(c); });
     document.querySelectorAll(".card video").forEach(function (o) { if (o !== video) o.pause(); });
     if (card.classList.contains("grande")) return;
     card.classList.add("grande");
@@ -326,6 +393,7 @@
     panel.replaceChildren(mensaje("Cargando…"));
     obtenerArbol().then(function (rutas) {
       pintar(panel, seccion, agrupar(rutas, seccion.carpeta));
+      revelar(panel.querySelectorAll(".card, .group h3, .empty"));
     }).catch(function () {
       panel.replaceChildren(mensaje("No se pudo cargar esta sección. Intenta de nuevo en unos minutos."));
     });

@@ -90,6 +90,8 @@
   .contact a:hover { color: var(--orange); background: var(--black); padding: 0 .3rem; text-decoration: none; }
 
   footer { background: var(--black); color: var(--cream); padding: 1.5rem 0; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1.5rem; }
+  #visitas strong { color: var(--yellow); }
 
   /* Animaciones */
   .btn, .tabs button, .skills li, .card, nav a, .contact a { transition: transform .3s cubic-bezier(.2, .8, .2, 1), background-color .25s, color .25s, box-shadow .3s; }
@@ -174,12 +176,16 @@
   </section>
 </main>
 
-<footer><div class="wrap">© <span id="anio">2026</span> ItsS3id</div></footer>
+<footer><div class="wrap"><span>© <span id="anio">2026</span> ItsS3id</span><span id="visitas" hidden>Visitas a la página: <strong id="visitas-n">…</strong></span></div></footer>
 
 <script>
   // Si la página no detecta tu repositorio sola, escribe aquí tu usuario y el nombre del repositorio.
   var REPO_USER = "";
   var REPO_NAME = "";
+
+  // Contador de visitas: escribe aquí el código de tu cuenta de GoatCounter (por ejemplo "itss3id").
+  // Mientras esté vacío, el contador no aparece.
+  var GOATCOUNTER = "";
 
   // Textos de respaldo: se usan hasta que crees los archivos sobre-mi.txt, habilidades.txt y contacto.txt
   var SOBRE_DEFECTO = "inicio: 2025-08\nLlevo [tiempo] animando en Roblox. Cuéntale a tus visitantes qué haces y qué te gusta crear.";
@@ -409,6 +415,22 @@
     });
   });
   cargar("animaciones");
+
+  /* ---------- Contador de visitas (GoatCounter) ---------- */
+  if (/^[a-z0-9-]+$/i.test(GOATCOUNTER)) {
+    var gc = document.createElement("script");
+    gc.async = true;
+    gc.src = "https://gc.zgo.at/count.js";
+    gc.setAttribute("data-goatcounter", "https://" + GOATCOUNTER + ".goatcounter.com/count");
+    document.body.appendChild(gc);
+    fetch("https://" + GOATCOUNTER + ".goatcounter.com/counter/TOTAL.json")
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) {
+        document.getElementById("visitas-n").textContent = d.count;
+        document.getElementById("visitas").hidden = false;
+      })
+      .catch(function () {});
+  }
 </script>
 </body>
 </html>

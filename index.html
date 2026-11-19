@@ -93,6 +93,20 @@
   .contact a:hover { color: var(--orange); background: var(--black); padding: 0 .3rem; text-decoration: none; }
 
   footer { background: var(--black); color: var(--cream); padding: 1.5rem 0; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem 1.5rem; }
+
+  /* Valoración con estrellas */
+  .rating { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .rating .estrellas { display: flex; gap: .1rem; }
+  .rating .estrellas button { font: inherit; font-size: 1.7rem; line-height: 1; cursor: pointer; background: none; border: 0; padding: .1rem .15rem; color: #5a5144; transition: transform .2s cubic-bezier(.2, .8, .2, 1), color .2s; }
+  .rating .estrellas button.on { color: var(--yellow); }
+  .rating .estrellas button.mia { color: var(--orange); }
+  .rating .estrellas button:hover { transform: scale(1.25) rotate(-6deg); }
+  .rating .estrellas button:disabled { cursor: progress; opacity: .6; }
+  .rating .resumen { font-weight: 800; color: var(--yellow); }
+  .rating .resumen small { font-weight: 600; color: var(--cream); font-size: 1rem; }
+  .rating .aviso { flex-basis: 100%; margin: 0; font-size: .95rem; color: var(--cream); text-align: right; }
+  @media (max-width: 36rem) { .rating .aviso { text-align: left; } }
 
   /* Animaciones */
   .btn, .tabs button, .skills li, .card, nav a, .contact a { transition: transform .3s cubic-bezier(.2, .8, .2, 1), background-color .25s, color .25s, box-shadow .3s; }
@@ -177,12 +191,26 @@
   </section>
 </main>
 
-<footer><div class="wrap">© <span id="anio">2026</span> ItsS3id</div></footer>
+<footer>
+  <div class="wrap">
+    <span>© <span id="anio">2026</span> ItsS3id</span>
+    <div class="rating" id="valoracion">
+      <div class="estrellas" id="estrellas" role="group" aria-label="Valora esta página de 1 a 5 estrellas"></div>
+      <span class="resumen" id="resumen" aria-live="polite">Cargando…</span>
+      <p class="aviso" id="aviso" hidden></p>
+    </div>
+  </div>
+</footer>
 
 <script>
   // Si la página no detecta tu repositorio sola, escribe aquí tu usuario y el nombre del repositorio.
   var REPO_USER = "";
   var REPO_NAME = "";
+
+  // Valoraciones: pega aquí la URL de tu Firebase Realtime Database, sin barra al final.
+  // Ejemplo: "https://mi-portafolio-default-rtdb.firebaseio.com"
+  // Si la dejas vacía, las valoraciones solo se guardan en el navegador de cada visitante (modo de prueba).
+  var RATING_DB = "";
 
 
   // Textos de respaldo: se usan hasta que crees los archivos sobre-mi.txt, habilidades.txt y contacto.txt
@@ -414,6 +442,115 @@
   });
   cargar("animaciones");
 
+  /* ---------- Valoración con estrellas ---------- */
+  (function () {
+    var KEY_MIA = "itss3id-mi-voto";
+    var KEY_LOCAL = "itss3id-votos-local";
+    var cont = document.getElementById("estrellas");
+    var resumen = document.getElementById("resumen");
+    var aviso = document.getElementById("aviso");
+    var db = RATING_DB.replace(/\/+$/, "");
+    var votos = { s1: 0, s2: 0, s3: 0, s4: 0, s5: 0 };
+    var miVoto = 0, ocupado = false;
+
+    function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function leer(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function decir(t) { aviso.textContent = t; aviso.hidden = !t; }
+
+    miVoto = +leer(KEY_MIA) || 0;
+
+    var estrellas = [1, 2, 3, 4, 5].map(function (n) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = "★";
+      b.setAttribute("aria-label", n + (n === 1 ? " estrella" : " estrellas"));
+      b.addEventListener("click", function () { votar(n); });
+      b.addEventListener("mouseenter", function () { marcar(n, false); });
+      b.addEventListener("focus", function () { marcar(n, false); });
+      cont.appendChild(b);
+      return b;
+    });
+    cont.addEventListener("mouseleave", function () { marcar(miVoto, true); });
+    cont.addEventListener("focusout", function () { marcar(miVoto, true); });
+
+    function marcar(hasta, esMio) {
+      estrellas.forEach(function (b, i) {
+        b.classList.toggle("on", i < hasta);
+        b.classList.toggle("mia", esMio && i < hasta);
+      });
+    }
+
+    function pintarResumen() {
+      var total = 0, suma = 0;
+      for (var n = 1; n <= 5; n++) { total += votos["s" + n]; suma += n * votos["s" + n]; }
+      if (!total) { resumen.textContent = "Sé el primero en valorar"; }
+      else {
+        var prom = (suma / total).toFixed(1).replace(".", ",");
+        resumen.replaceChildren();
+        resumen.appendChild(document.createTextNode(prom + " "));
+        var s = document.createElement("small");
+        s.textContent = "(" + total + (total === 1 ? " voto)" : " votos)");
+        resumen.appendChild(s);
+      }
+      marcar(miVoto, true);
+    }
+
+    function cargarVotos() {
+      if (!db) {
+        try { var l = JSON.parse(leer(KEY_LOCAL) || "null"); if (l) votos = l; } catch (e) {}
+        pintarResumen(); return;
+      }
+      fetch(db + "/valoraciones.json", { cache: "no-store" })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (d) {
+          d = d || {};
+          for (var n = 1; n <= 5; n++) votos["s" + n] = Math.max(0, +d["s" + n] || 0);
+          pintarResumen();
+        })
+        .catch(function () { resumen.textContent = "Valoraciones no disponibles"; });
+    }
+
+    function votar(n) {
+      if (ocupado || n === miVoto) return;
+      ocupado = true;
+      estrellas.forEach(function (b) { b.disabled = true; });
+      var anterior = miVoto;
+
+      function listo() {
+        miVoto = n; guardar(KEY_MIA, String(n));
+        ocupado = false;
+        estrellas.forEach(function (b) { b.disabled = false; });
+        pintarResumen();
+        decir(anterior ? "Cambiaste tu voto. ¡Gracias!" : "¡Gracias por tu valoración!");
+      }
+      function fallo() {
+        ocupado = false;
+        estrellas.forEach(function (b) { b.disabled = false; });
+        marcar(miVoto, true);
+        decir("No se pudo guardar tu voto. Intenta de nuevo.");
+      }
+
+      if (!db) {
+        if (anterior) votos["s" + anterior] = Math.max(0, votos["s" + anterior] - 1);
+        votos["s" + n] += 1;
+        guardar(KEY_LOCAL, JSON.stringify(votos));
+        listo(); return;
+      }
+
+      // Incrementos atómicos de Firebase: nunca se pisan votos de varias personas a la vez.
+      var cambio = {};
+      cambio["s" + n] = { ".sv": { increment: 1 } };
+      if (anterior) cambio["s" + anterior] = { ".sv": { increment: -1 } };
+      fetch(db + "/valoraciones.json", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cambio)
+      }).then(function (r) { if (!r.ok) throw new Error(r.status); })
+        .then(function () { listo(); cargarVotos(); })
+        .catch(fallo);
+    }
+
+    cargarVotos();
+  })();
 </script>
 </body>
 </html>

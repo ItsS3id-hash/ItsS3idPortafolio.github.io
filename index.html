@@ -84,6 +84,8 @@
   .card.vuelve { animation: vuelve .45s cubic-bezier(.2, .8, .2, 1); }
   .card .body { padding: .9rem 1.2rem 1.1rem; }
   .card h4 { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--yellow); }
+  .card .estado { margin: .3rem 0 0; font-size: .95rem; color: var(--yellow-soft); }
+  .card .estado:empty { display: none; }
   .card a { display: inline-block; margin-top: .4rem; color: var(--orange); }
   .empty { margin: 0; padding: 1.4rem 1.6rem; background: var(--yellow-soft); border: 3px dashed var(--black); border-radius: 12px; max-width: 34rem; }
 
@@ -230,12 +232,12 @@
   var IMG = /\.(png|jpe?g|gif|webp|avif)$/i;
   var VID = /\.(mp4|webm|mov)$/i;
   var CACHE_ARBOL = "itss3id-arbol-v1";
-  var CACHE_MIN = 5; // minutos que se reutiliza la lista de archivos (evita el límite de la API de GitHub)
+  var CACHE_MIN = 1; // minutos que se reutiliza la lista de archivos (evita el límite de la API de GitHub)
 
   document.getElementById("anio").textContent = new Date().getFullYear();
 
-  function guardarS(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
-  function leerS(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function guardarS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function leerS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
   /* ---------- Animaciones al hacer scroll ---------- */
   var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -263,13 +265,13 @@
     entradas.forEach(function (e) {
       if (!e.isIntersecting) return;
       perezoso.unobserve(e.target);
-      e.target.src = e.target.getAttribute("data-src");
+      e.target._iniciar();
     });
   }, { rootMargin: "300px 0px" }) : null;
 
   function detenerVideos() {
     document.querySelectorAll("#panel video").forEach(function (v) {
-      v.pause(); v.removeAttribute("src"); v.load(); // corta la descarga y libera memoria
+      v._muerto = true; v.pause(); v.removeAttribute("src"); v.load(); // corta la descarga y libera memoria
     });
   }
   document.addEventListener("visibilitychange", function () {
@@ -365,10 +367,9 @@
     var r = detectarRepo();
     if (!r.user) { arbol = Promise.resolve([]); return arbol; }
     var clave = CACHE_ARBOL + ":" + r.user + "/" + r.repo;
-    try {
-      var c = JSON.parse(leerS(clave) || "null");
-      if (c && Date.now() - c.t < CACHE_MIN * 60000) { arbol = Promise.resolve(c.rutas); return arbol; }
-    } catch (e) {}
+    var guardado = null;
+    try { guardado = JSON.parse(leerS(clave) || "null"); } catch (e) {}
+    if (guardado && Date.now() - guardado.t < CACHE_MIN * 60000) { arbol = Promise.resolve(guardado.rutas); return arbol; }
     var base = "https://api.github.com/repos/" + r.user + "/" + r.repo + "/git/trees/";
     function pedir(rama) {
       return fetch(base + rama + "?recursive=1", { headers: { "Accept": "application/vnd.github+json" } })
@@ -378,6 +379,9 @@
       var rutas = d.tree.filter(function (n) { return n.type === "blob"; }).map(function (n) { return n.path; });
       guardarS(clave, JSON.stringify({ t: Date.now(), rutas: rutas }));
       return rutas;
+    }).catch(function (err) {
+      if (guardado) return guardado.rutas; // límite de GitHub o mala señal: usa la última lista conocida
+      throw err;
     });
     arbol.catch(function () { arbol = null; });
     return arbol;
@@ -404,26 +408,57 @@
 
   function tarjeta(f) {
     var card = document.createElement("article"); card.className = "card";
-    var src = ruta(f.path), nombre = titulo(f.name);
+    var src = ruta(f.path), nombre = titulo(f.name), estado = null;
     if (IMG.test(f.name)) {
       var img = document.createElement("img"); img.alt = nombre; img.loading = "lazy"; img.decoding = "async";
       img.addEventListener("load", function () { ajustarMarco(card, img.naturalWidth, img.naturalHeight); });
       img.src = src; card.appendChild(img);
     } else if (VID.test(f.name)) {
+      estado = document.createElement("p"); estado.className = "estado"; estado.setAttribute("role", "status");
       var v = document.createElement("video"); v.controls = true; v.preload = "metadata"; v.loop = true;
       v.setAttribute("playsinline", ""); v.setAttribute("aria-label", nombre);
-      v.addEventListener("loadedmetadata", function () { ajustarMarco(card, v.videoWidth, v.videoHeight); });
-      v.addEventListener("play", function () { clearTimeout(card._t); ampliar(card, v); });
+      var intento = 0, espera = null, ok = false;
+      function decir(t) { estado.textContent = t; }
+      function iniciar() {
+        clearTimeout(espera);
+        if (v._muerto) return;
+        // Tras un fallo se añade ?r=... para saltarse un 404 que la CDN de GitHub Pages haya guardado en caché.
+        v.src = src + (intento ? "?r=" + Date.now() : "") + "#t=0.1";
+        vigilar(0);
+      }
+      function fallar() {
+        clearTimeout(espera);
+        if (ok || v._muerto) return;
+        intento++;
+        if (intento > 12) { decir("No se pudo cargar el video. Toca aquí para reintentar."); return; }
+        decir("Publicando el video… reintentando (" + intento + ")");
+        espera = setTimeout(iniciar, Math.min(30, 5 * intento) * 1000);
+      }
+      function vigilar(n) {
+        espera = setTimeout(function () {
+          if (ok || v._muerto) return;
+          if (v.error) return fallar();
+          if (v.networkState === 2 && n < 18) { decir("Cargando…"); return vigilar(n + 1); } // sigue descargando
+          if (v.networkState === 2) return fallar();
+          decir("Toca play para cargarlo"); // el navegador (sobre todo en móvil) pospone la descarga hasta tocar play
+        }, 10000);
+      }
+      v.addEventListener("loadedmetadata", function () { ok = true; clearTimeout(espera); decir(""); ajustarMarco(card, v.videoWidth, v.videoHeight); });
+      v.addEventListener("error", fallar);
+      v.addEventListener("play", function () { clearTimeout(card._t); decir(""); ampliar(card, v); });
       v.addEventListener("pause", function () {
         clearTimeout(card._t);
         card._t = setTimeout(function () { if (v.paused && !v.seeking) achicar(card); }, 350);
       });
-      v.setAttribute("data-src", src + "#t=0.1");
+      estado.style.cursor = "pointer";
+      estado.addEventListener("click", function () { if (intento > 12) { intento = 0; decir("Cargando…"); iniciar(); } });
+      v._iniciar = iniciar;
       card.appendChild(v);
-      if (perezoso) perezoso.observe(v); else v.src = src + "#t=0.1";
+      if (perezoso) perezoso.observe(v); else iniciar();
     }
     var body = document.createElement("div"); body.className = "body";
     var h = document.createElement("h4"); h.textContent = nombre; body.appendChild(h);
+    if (estado) body.appendChild(estado);
     if (!IMG.test(f.name) && !VID.test(f.name)) {
       var a = document.createElement("a"); a.href = src; a.textContent = "Abrir archivo"; body.appendChild(a);
     }
